@@ -1,0 +1,753 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>omi-midskip</title>
+<style>
+*{box-sizing:border-box}
+body{
+margin:0;background:#090b12;color:white;
+font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+display:flex;justify-content:center;align-items:center;
+min-height:100vh;padding:15px
+}
+.phone{
+width:390px;max-width:100%;height:820px;max-height:95vh;
+background:#111;border:5px solid #444;border-radius:45px;
+overflow:hidden;position:relative;box-shadow:0 20px 70px #000
+}
+.screen{
+position:absolute;inset:0;
+background:linear-gradient(145deg,#182b49,#776b9b,#d9a9b5);
+overflow:hidden
+}
+.status{
+height:42px;display:flex;justify-content:space-between;
+padding:12px 25px;font-size:12px;font-weight:bold
+}
+.island{
+position:absolute;top:9px;left:50%;transform:translateX(-50%);
+width:105px;height:27px;background:#000;border-radius:30px
+}
+.lock{
+position:absolute;inset:0;z-index:5;
+display:flex;flex-direction:column;align-items:center;
+padding-top:90px;background:#0002
+}
+.lock-date{font-size:17px}
+.lock-time{font-size:78px;font-weight:200}
+.weather{
+margin-top:20px;background:#ffffff25;padding:15px;
+border-radius:20px;width:150px;text-align:center
+}
+.weather h2{margin:8px}
+.unlock{margin-top:auto;margin-bottom:35px;background:none;border:0;color:white;cursor:pointer}
+.home{
+display:none;position:absolute;inset:55px 18px 30px;
+flex-direction:column
+}
+.widget{
+background:#ffffff30;border-radius:20px;
+padding:15px;margin-bottom:20px;backdrop-filter:blur(15px)
+}
+.widget h1{margin:7px 0;font-size:28px}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px 8px}
+.app-icon{
+background:none;border:0;color:white;
+display:flex;flex-direction:column;align-items:center;
+gap:5px;font-size:11px;cursor:pointer
+}
+.icon{
+height:55px;width:55px;border-radius:16px;
+background:#ffffff35;display:grid;place-items:center;
+font-size:28px;box-shadow:0 5px 12px #0003
+}
+.dock{
+margin-top:auto;background:#ffffff35;
+border-radius:24px;padding:12px;
+display:flex;justify-content:space-around
+}
+.app{
+position:absolute;inset:0;z-index:4;
+background:#f6f6f8;color:#17171b;
+display:none;flex-direction:column
+}
+.app.open{display:flex}
+.header{
+padding:45px 16px 15px;
+display:flex;justify-content:space-between;
+align-items:center;font-weight:bold;border-bottom:1px solid #ddd
+}
+.header button{background:none;border:0;color:#1689ff;cursor:pointer}
+.content{padding:15px;overflow:auto;flex:1}
+.card{
+background:white;border-radius:15px;
+padding:15px;margin-bottom:12px
+}
+.row{display:flex;align-items:center;gap:12px}
+.avatar{
+width:45px;height:45px;border-radius:50%;
+background:linear-gradient(135deg,#f2a9bd,#9a9edc);
+display:grid;place-items:center;font-size:22px
+}
+.homebar{
+position:absolute;bottom:8px;left:50%;
+transform:translateX(-50%);
+width:110px;height:5px;background:#111;
+border-radius:10px;z-index:10
+}
+button{font:inherit}
+input{font:inherit}
+.blue{background:#1689ff;color:white;border:0;border-radius:20px;padding:10px 17px}
+.chat{padding:12px;border-bottom:1px solid #ddd;cursor:pointer}
+.bubble{padding:10px 14px;background:#e5e5ea;border-radius:18px;margin:7px;max-width:80%;width:fit-content}
+.bubble.me{background:#1689ff;color:white;margin-left:auto}
+#chatMessages{flex:1;overflow:auto;padding:12px}
+#chatScreen{display:none;flex:1;flex-direction:column;overflow:hidden}
+#chatScreen form{display:flex;padding:10px;gap:7px;background:white}
+#chatScreen input{flex:1;min-width:0;padding:10px;border:1px solid #ddd;border-radius:20px;color:#111}
+.photos{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+.photo{aspect-ratio:1;background:linear-gradient(135deg,#d8a9c0,#8499b8);display:grid;place-items:center;font-size:32px}
+.post{background:white;border-radius:14px;margin-bottom:15px;overflow:hidden}
+.post-image{height:240px;display:grid;place-items:center;font-size:80px;background:linear-gradient(135deg,#e6b8c7,#8c9eb9)}
+.post-actions{padding:12px}
+.item{padding:14px 0;border-bottom:1px solid #eee;display:flex;justify-content:space-between}
+.music-art{height:210px;width:210px;border-radius:20px;margin:20px auto;background:linear-gradient(135deg,#c0a0e9,#eb9caa);display:grid;place-items:center;font-size:70px}
+#toast{display:none;position:absolute;top:50px;left:50%;transform:translateX(-50%);background:#222;color:white;padding:10px;border-radius:20px;z-index:20}
+@media(max-width:430px){
+body{padding:0}
+.phone{height:100vh;max-height:none;width:100%;border:0;border-radius:0}
+}
+</style>
+</head>
+<body>
+<div class="phone">
+<div class="screen" id="screen">
+<div class="status">
+<span id="statusTime">9:41</span>
+<div class="island"></div>
+<span>● ◉ ▰</span>
+</div>
+
+<div class="lock" id="lock">
+<div class="lock-date" id="lockDate">Sunday, November 8</div>
+<div class="lock-time" id="lockTime">9:41</div>
+<div class="weather">
+☀️ WEATHER
+<h2>72°</h2>
+Sunny · Tampa
+</div>
+<button class="unlock" onclick="unlock()">Swipe up to unlock ↑</button>
+</div>
+
+<div class="home" id="home">
+<div class="widget">
+<div id="homeDate">TODAY</div>
+<h1 id="homeClock">9:41</h1>
+Have a lovely day ✨
+</div>
+
+<div class="grid">
+<button class="app-icon" onclick="openApp('messages')"><span class="icon" style="background:#37c86c">💬</span>Messages</button>
+<button class="app-icon" onclick="openApp('instagram')"><span class="icon" style="background:#d94c91">📸</span>Instagram</button>
+<button class="app-icon" onclick="openApp('camera')"><span class="icon">📷</span>Camera</button>
+<button class="app-icon" onclick="openApp('photos')"><span class="icon">🌈</span>Photos</button>
+<button class="app-icon" onclick="openApp('phone')"><span class="icon" style="background:#35c66d">📞</span>Phone</button>
+<button class="app-icon" onclick="openApp('contacts')"><span class="icon">👥</span>Contacts</button>
+<button class="app-icon" onclick="openApp('music')"><span class="icon" style="background:#222">🎵</span>Music</button>
+<button class="app-icon" onclick="openApp('calendar')"><span class="icon">📅</span>Calendar</button>
+<button class="app-icon" onclick="openApp('settings')"><span class="icon">⚙️</span>Settings</button>
+</div>
+
+<div class="dock">
+<button class="app-icon" onclick="openApp('phone')"><span class="icon" style="background:#35c66d">📞</span></button>
+<button class="app-icon" onclick="openApp('messages')"><span class="icon" style="background:#37c86c">💬</span></button>
+<button class="app-icon" onclick="openApp('instagram')"><span class="icon" style="background:#d94c91">📸</span></button>
+<button class="app-icon" onclick="openApp('music')"><span class="icon" style="background:#222">🎵</span></button>
+</div>
+</div>
+</div>
+</div>
+
+<!-- PART 2: PHONE APPLICATIONS -->
+
+<div class="app" id="messages">
+<div class="header">
+<button onclick="goHome()">‹ Home</button>
+Messages
+<button onclick="newChat()">＋</button>
+</div>
+<div class="content" id="messageList"></div>
+<div id="chatScreen">
+<div class="header">
+<button onclick="showChats()">‹ Messages</button>
+<b id="chatName">Contact</b>
+</div>
+<div id="chatMessages"></div>
+<form onsubmit="sendMessage(event)">
+<input id="messageInput" placeholder="iMessage">
+<button class="blue">↑</button>
+</form>
+</div>
+</div>
+
+<div class="app" id="instagram">
+<div class="header">
+<button onclick="goHome()">‹ Home</button>
+Instagram
+<button onclick="toast('Notifications')">♡</button>
+</div>
+<div class="content">
+<div class="card row">
+<div class="avatar">🌸</div>
+<div><b>your.username</b><br><small>12 posts · 340 followers</small></div>
+</div>
+<div class="card">
+<b>Stories</b>
+<div class="row" style="justify-content:space-around;margin-top:15px">
+<span>🌷</span><span>🌞</span><span>🐚</span><span>🩷</span>
+</div>
+</div>
+<div id="posts"></div>
+</div>
+</div>
+
+<div class="app" id="camera">
+<div class="header">
+<button onclick="goHome()">‹ Home</button>
+Camera
+<button onclick="openApp('photos')">Photos</button>
+</div>
+<div class="content" style="background:#222;color:white;text-align:center">
+<div style="font-size:100px;margin:50px">📷</div>
+<p>Camera photo upload</p>
+<input type="file" id="cameraUpload" accept="image/*">
+<br><br>
+<button class="blue" onclick="saveUpload()">Save to Photos</button>
+</div>
+</div>
+
+<div class="app" id="photos">
+<div class="header">
+<button onclick="goHome()">‹ Home</button>
+Photos
+</div>
+<div class="content">
+<h2>Photo Library</h2>
+<div class="photos" id="photoGrid">
+<div class="photo">🌅</div>
+<div class="photo">🌸</div>
+<div class="photo">🌊</div>
+<div class="photo">☁️</div>
+<div class="photo">🌷</div>
+<div class="photo">🦋</div>
+</div>
+</div>
+</div>
+
+<div class="app" id="phone">
+<div class="header">
+<button onclick="goHome()">‹ Home</button>
+Phone
+<button onclick="openApp('contacts')">Contacts</button>
+</div>
+<div class="content" style="text-align:center">
+<h2>Keypad</h2>
+<div class="card" id="dialNumber" style="font-size:25px;min-height:50px"></div>
+<div class="grid" style="grid-template-columns:repeat(3,1fr);gap:15px">
+<button class="blue" onclick="dial('1')">1</button>
+<button class="blue" onclick="dial('2')">2</button>
+<button class="blue" onclick="dial('3')">3</button>
+<button class="blue" onclick="dial('4')">4</button>
+<button class="blue" onclick="dial('5')">5</button>
+<button class="blue" onclick="dial('6')">6</button>
+<button class="blue" onclick="dial('7')">7</button>
+<button class="blue" onclick="dial('8')">8</button>
+<button class="blue" onclick="dial('9')">9</button>
+<button class="blue" onclick="dial('*')">*</button>
+<button class="blue" onclick="dial('0')">0</button>
+<button class="blue" onclick="dial('#')">#</button>
+</div>
+<br>
+<button class="blue" onclick="startCall()">📞 Call</button>
+<p class="muted">Simulated calls only.</p>
+</div>
+</div>
+
+<div class="app" id="contacts">
+<div class="header">
+<button onclick="goHome()">‹ Home</button>
+Contacts
+<button onclick="addContact()">＋</button>
+</div>
+<div class="content" id="contactList"></div>
+</div>
+
+<div class="app" id="music">
+<div class="header">
+<button onclick="goHome()">‹ Home</button>
+Music
+</div>
+<div class="content" style="text-align:center">
+<p>NOW PLAYING</p>
+<div class="music-art" id="musicArt">🎧</div>
+<h2 id="trackName">Midnight Memories</h2>
+<p id="artistName">Your Playlist</p>
+<div class="music-controls">
+<button onclick="changeTrack(-1)">⏮</button>
+<button class="play" id="playButton" onclick="toggleMusic()">▶</button>
+<button onclick="changeTrack(1)">⏭</button>
+</div>
+<div class="card">
+<div class="item" onclick="selectTrack(0)">🎧 Midnight Memories</div>
+<div class="item" onclick="selectTrack(1)">🌙 After Hours</div>
+<div class="item" onclick="selectTrack(2)">☀️ Golden Days</div>
+</div>
+</div>
+</div>
+
+<div class="app" id="calendar">
+<div class="header">
+<button onclick="goHome()">‹ Home</button>
+Calendar
+<button onclick="addEvent()">＋</button>
+</div>
+<div class="content">
+<div class="row" style="justify-content:space-between">
+<button onclick="moveMonth(-1)">‹</button>
+<h2 id="monthTitle">November 2026</h2>
+<button onclick="moveMonth(1)">›</button>
+</div>
+<div class="calendar-grid" id="calendarGrid"></div>
+<div class="card">
+<b id="selectedDate">Selected day</b>
+<p id="eventText">No events scheduled.</p>
+</div>
+</div>
+</div>
+
+<div class="app" id="settings">
+<div class="header">
+<button onclick="goHome()">‹ Home</button>
+Settings
+</div>
+<div class="content">
+<div class="card row">
+<div class="avatar">🌸</div>
+<div><b>omi-midskip</b><br><small>Virtual iPhone</small></div>
+</div>
+<div class="card">
+<h3>Appearance</h3>
+<div class="item">
+Wallpaper color
+<input type="color" id="wallColor" value="#263a5d" onchange="changeWallpaper(this.value)">
+</div>
+<div class="item">
+Lock screen
+<button onclick="lockPhone()">Lock now</button>
+</div>
+</div>
+<div class="card">
+<h3>Device</h3>
+<div class="item">Device name <b>omi-midskip</b></div>
+<div class="item">Software <b>iOS-inspired</b></div>
+<button onclick="resetDemo()" style="color:red">Reset demo</button>
+</div>
+</div>
+</div>
+
+<div id="call" class="app">
+<div class="header">
+<button onclick="endCall()">Close</button>
+Phone
+</div>
+<div class="content" style="background:#222c40;color:white;text-align:center">
+<div class="avatar" style="margin:50px auto">👤</div>
+<h2 id="callName">Unknown</h2>
+<p id="callStatus">Calling...</p>
+<br><br>
+<button class="blue" style="background:#ef4444" onclick="endCall()">☎ End call</button>
+</div>
+</div>
+
+<div id="toast"></div>
+<div class="homebar" onclick="goHome()"></div>
+</div>
+</div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+
+function save(k,v){
+ localStorage.setItem("omi-"+k,JSON.stringify(v));
+}
+function load(k,d){
+ try{return JSON.parse(localStorage.getItem("omi-"+k))??d}
+ catch{return d}
+}
+
+let chats=load("chats",{
+ Mom:[["them","Hey sweetie! ❤️"],["me","Hiiii!! 💗"]],
+ Bestie:[["them","GIRLLLL 😭"],["me","WHAT HAPPENED"]],
+ Alex:[["them","See you tomorrow!"]]
+});
+
+let contacts=load("contacts",["Mom","Bestie","Alex","Taylor"]);
+let photos=load("photos",[]);
+let events=load("events",{});
+let currentChat=null;
+let dialValue="";
+let track=0;
+let playing=false;
+let month=new Date().getMonth();
+let year=new Date().getFullYear();
+let selectedDay=new Date().getDate();
+
+const tracks=[
+ ["Midnight Memories","Your playlist","🎧"],
+ ["After Hours","Night Drive","🌙"],
+ ["Golden Days","Summer Mix","☀️"]
+];
+
+function toast(message){
+ const t=$("toast");
+ t.textContent=message;
+ t.style.display="block";
+ setTimeout(()=>t.style.display="none",1800);
+}
+
+function updateClock(){
+ const d=new Date();
+ const time=d.toLocaleTimeString([],{hour:"numeric",minute:"2-digit"});
+ $("statusTime").textContent=time;
+ $("lockTime").textContent=time;
+ $("homeClock").textContent=time;
+ $("lockDate").textContent=d.toLocaleDateString([],{
+  weekday:"long",month:"long",day:"numeric"
+ });
+}
+updateClock();
+setInterval(updateClock,1000);
+
+function unlock(){
+ $("lock").style.display="none";
+ $("home").style.display="flex";
+}
+
+function goHome(){
+ document.querySelectorAll(".app").forEach(a=>a.classList.remove("open"));
+ $("home").style.display="flex";
+ currentChat=null;
+}
+
+function openApp(id){
+ $("lock").style.display="none";
+ $("home").style.display="none";
+ document.querySelectorAll(".app").forEach(a=>a.classList.remove("open"));
+ $(id).classList.add("open");
+
+ if(id==="messages")showChats();
+ if(id==="instagram")renderPosts();
+ if(id==="contacts")renderContacts();
+ if(id==="photos")renderPhotos();
+ if(id==="calendar")renderCalendar();
+ if(id==="music")renderTrack();
+}
+
+function safe(s){
+ return String(s).replace(/[&<>"']/g,c=>({
+ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+ })[c]);
+}
+
+// MESSAGES
+
+function showChats(){
+ currentChat=null;
+ $("chatScreen").style.display="none";
+ $("messageList").style.display="block";
+ renderChats();
+}
+
+function renderChats(){
+ $("messageList").innerHTML=Object.keys(chats).map(n=>`
+ <div class="chat row" onclick="openChat('${safe(n)}')">
+ <div class="avatar">💗</div>
+ <div>
+ <b>${safe(n)}</b>
+ <div style="font-size:12px;color:#888">
+ ${safe(chats[n].at(-1)?.[1]||"No messages")}
+ </div>
+ </div>
+ </div>`).join("");
+}
+
+function openChat(n){
+ currentChat=n;
+ $("messageList").style.display="none";
+ $("chatScreen").style.display="flex";
+ $("chatName").textContent=n;
+ renderMessages();
+}
+
+function renderMessages(){
+ $("chatMessages").innerHTML=(chats[currentChat]||[]).map(m=>`
+ <div class="bubble ${m[0]==="me"?"me":""}">
+ ${safe(m[1])}
+ </div>`).join("");
+ $("chatMessages").scrollTop=$("chatMessages").scrollHeight;
+}
+
+function sendMessage(e){
+ e.preventDefault();
+ const input=$("messageInput");
+ const value=input.value.trim();
+ if(!value||!currentChat)return;
+
+ chats[currentChat].push(["me",value]);
+ save("chats",chats);
+ input.value="";
+ renderMessages();
+}
+
+function newChat(){
+ const name=prompt("Who do you want to message?");
+ if(!name)return;
+ if(!chats[name])chats[name]=[];
+ save("chats",chats);
+ openChat(name);
+}
+
+// INSTAGRAM
+
+function renderPosts(){
+ const posts=[
+ ["🌅","sunny.days","Golden hour hits different ✨"],
+ ["🌸","your.username","Little moments lately ♡"],
+ ["🌊","beach.diaries","Wish I could stay here forever"],
+ ["🦋","dreamy.days","Life lately 💗"]
+ ];
+
+ $("posts").innerHTML=posts.map(p=>`
+ <div class="post">
+ <div class="row" style="padding:12px">
+ <div class="avatar">${p[0]}</div>
+ <b>${p[1]}</b>
+ </div>
+ <div class="post-image">${p[0]}</div>
+ <div class="post-actions">
+ <button onclick="likePost(this)" style="border:0;background:none;font-size:24px">♡</button>
+ <button onclick="toast('Comments demo')" style="border:0;background:none;font-size:22px">♧</button>
+ </div>
+ <div style="padding:0 12px 15px;font-size:13px">
+ <b>${p[1]}</b> ${p[2]}
+ </div>
+ </div>`).join("");
+}
+
+function likePost(button){
+ button.textContent=button.textContent==="♡"?"♥":"♡";
+ button.style.color=button.textContent==="♥"?"#ed3e65":"#222";
+}
+
+// PHOTOS
+
+function saveUpload(){
+ const file=$("cameraUpload").files[0];
+ if(!file)return toast("Choose a picture first!");
+ if(!file.type.startsWith("image/"))return toast("Choose an image!");
+
+ const reader=new FileReader();
+ reader.onload=()=>{
+  photos.push(reader.result);
+  save("photos",photos);
+  renderPhotos();
+  toast("Photo saved! 💗");
+ };
+ reader.readAsDataURL(file);
+}
+
+function renderPhotos(){
+ $("photoGrid").innerHTML=["🌅","🌸","🌊","☁️","🌷","🦋"].map(x=>
+ `<div class="photo">${x}</div>`
+ ).join("")+photos.map(src=>
+ `<div class="photo"><img src="${src}" style="width:100%;height:100%;object-fit:cover"></div>`
+ ).join("");
+}
+
+// PHONE
+
+function dial(n){
+ dialValue+=n;
+ $("dialNumber").textContent=dialValue;
+}
+
+function startCall(){
+ if(!dialValue)return toast("Enter a number first!");
+ $("callName").textContent=dialValue;
+ $("callStatus").textContent="Calling...";
+ openApp("call");
+}
+
+function startContactCall(name){
+ $("callName").textContent=name;
+ $("callStatus").textContent="Calling...";
+ openApp("call");
+}
+
+function endCall(){
+ toast("Call ended");
+ openApp("phone");
+}
+
+function renderContacts(){
+ $("contactList").innerHTML=contacts.map(n=>`
+ <div class="chat row">
+ <div class="avatar">👤</div>
+ <div style="flex:1">
+ <b>${safe(n)}</b>
+ <div style="font-size:12px;color:#888">Mobile</div>
+ </div>
+ <button onclick="startContactCall('${safe(n)}')">☎</button>
+ </div>`).join("");
+}
+
+function addContact(){
+ const name=prompt("Enter contact name:");
+ if(!name)return;
+ contacts.push(name);
+ save("contacts",contacts);
+ renderContacts();
+}
+
+// MUSIC
+
+function renderTrack(){
+ $("trackName").textContent=tracks[track][0];
+ $("artistName").textContent=tracks[track][1];
+ $("musicArt").textContent=tracks[track][2];
+ $("playButton").textContent=playing?"Ⅱ":"▶";
+}
+
+function toggleMusic(){
+ playing=!playing;
+ renderTrack();
+ toast(playing?"Playing demo track 🎵":"Music paused");
+}
+
+function changeTrack(direction){
+ track=(track+direction+tracks.length)%tracks.length;
+ renderTrack();
+}
+
+function selectTrack(n){
+ track=n;
+ playing=false;
+ renderTrack();
+}
+
+// CALENDAR
+
+function moveMonth(n){
+ month+=n;
+ if(month<0){month=11;year--}
+ if(month>11){month=0;year++}
+ renderCalendar();
+}
+
+function renderCalendar(){
+ const first=new Date(year,month,1).getDay();
+ const days=new Date(year,month+1,0).getDate();
+
+ $("monthTitle").textContent=
+ new Date(year,month).toLocaleDateString([],{month:"long",year:"numeric"});
+
+ let html=["S","M","T","W","T","F","S"].map(x=>
+ `<span style="color:#888">${x}</span>`
+ ).join("");
+
+ for(let i=0;i<first;i++)html+="<span></span>";
+
+ for(let d=1;d<=days;d++){
+ html+=`<button onclick="selectDate(${d})"
+ style="border:0;border-radius:50%;padding:9px;
+ background:${d===selectedDay?"#1689ff":"transparent"};
+ color:${d===selectedDay?"white":"#222"}">${d}</button>`;
+ }
+
+ $("calendarGrid").innerHTML=html;
+ updateSelectedDate();
+}
+
+function selectDate(d){
+ selectedDay=d;
+ renderCalendar();
+}
+
+function dateKey(){
+ return `${year}-${month+1}-${selectedDay}`;
+}
+
+function updateSelectedDate(){
+ $("selectedDate").textContent=
+ new Date(year,month,selectedDay).toDateString();
+ $("eventText").textContent=events[dateKey()]||"No events scheduled.";
+}
+
+function addEvent(){
+ const value=prompt("What is happening?");
+ if(!value)return;
+ events[dateKey()]=value;
+ save("events",events);
+ updateSelectedDate();
+ toast("Event saved! 📅");
+}
+
+// SETTINGS
+
+function changeWallpaper(color){
+ $("screen").style.background=
+ `linear-gradient(145deg,${color},#7e7994,#d6a8b8)`;
+ save("wallpaper",color);
+}
+
+function lockPhone(){
+ goHome();
+ $("home").style.display="none";
+ $("lock").style.display="flex";
+}
+
+function resetDemo(){
+ if(!confirm("Are you sure you want to reset your phone?"))return;
+ ["chats","contacts","photos","events","wallpaper"].forEach(k=>
+ localStorage.removeItem("omi-"+k)
+ );
+ location.reload();
+}
+
+// RESTORE SAVED DATA
+
+const savedWallpaper=load("wallpaper",null);
+
+if(savedWallpaper){
+ $("screen").style.background=
+ `linear-gradient(145deg,${savedWallpaper},#7e7994,#d6a8b8)`;
+ $("wallColor").value=savedWallpaper;
+}
+
+$("homeDate").textContent=new Date().toLocaleDateString([],{
+ weekday:"long",month:"long",day:"numeric"
+}).toUpperCase();
+
+renderChats();
+renderContacts();
+renderPhotos();
+renderPosts();
+renderCalendar();
+renderTrack();
+</script>
+</body>
+</html>
